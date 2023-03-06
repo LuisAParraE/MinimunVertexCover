@@ -21,6 +21,12 @@ struct Vertice
 	}
 };
 
+struct ParPerturbado
+{
+	int desde;
+	int hasta;
+};
+
 int len(string str);
 
 void split(string str, char seperator);
@@ -41,9 +47,35 @@ int respExacta(vector<int> todosVert, vector<vector<int>> conexiones, int cantid
 
 int respAproximada(vector<Vertice> &todosVert, vector<vector<int>> &conexiones, int &nroVer, int &nroAris, vector<int> &cubierta, int maximo);
 
+int respAleatoria(vector<Vertice> todosVert, vector<vector<int>> conexiones, vector<int> &cubierta);
+
 bool chequearIntercambio(vector<int> lados, vector<int> solucionInicial, vector<int> solucionFinal, int elemQuita, int elemAgre);
 
 int busquedaLocal(vector<vector<int>> conexiones, vector<int> &cubierta);
+
+bool verificarMemoriaTabu(vector<vector<ParPerturbado>> memoria, int desde, int hasta);
+
+vector<int> busquedaLocalTabu(vector<vector<int>> conexiones, vector<int> &cubierta, vector<vector<ParPerturbado>> &memoria);
+
+int busquedaTabu(vector<vector<int>> conexiones, vector<int> &cubierta);
+
+vector<bool> codificar(vector<int> fenotipo, int size);
+
+vector<int> decodificar(vector<bool> genotipo);
+
+int aptitud(vector<bool> genotipo);
+
+void seleccionarPadres(vector<bool> &padre1, vector<bool> &padre2, vector<vector<bool>> poblacion);
+
+void generarPoblacion(vector<vector<bool>> &poblacion, vector<vector<int>> conexiones, vector<Vertice> todosVert, int tam);
+
+void generarHijos(vector<bool> padre1, vector<bool> padre2, vector<bool> &hijo1, vector<bool> &hijo2);
+
+void mutarHijo(vector<bool> &hijo);
+
+vector<vector<bool>> nuevaPoblacion(vector<vector<bool>> poblacion, vector<bool> hijo1, vector<bool> hijo2, vector<vector<int>> conexiones, int tam);
+
+int algoritmoGenetico(vector<vector<int>> conexiones, vector<Vertice> todosVert, vector<int> &cubierta);
 
 vector<int> indiceVertirceOrdenGrado(vector<int> cubierta, vector<Vertice> todosVert);
 
