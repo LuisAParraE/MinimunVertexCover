@@ -51,6 +51,8 @@ int respAleatoria(vector<Vertice> todosVert, vector<vector<int>> conexiones, vec
 
 bool chequearIntercambio(vector<int> lados, vector<int> solucionInicial, vector<int> solucionFinal, int elemQuita, int elemAgre);
 
+bool verificarSolucionBL(vector<int> solucion, vector<int> conexiones);
+
 int busquedaLocal(vector<vector<int>> conexiones, vector<int> &cubierta);
 
 bool verificarMemoriaTabu(vector<vector<ParPerturbado>> memoria, int desde, int hasta);

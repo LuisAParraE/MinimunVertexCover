@@ -456,13 +456,40 @@ bool chequearIntercambio(vector<int> lados, vector<int> solucionInicial, vector<
 	return true;
 }
 
+bool verificarSolucionBL(vector<int> solucion, vector<int> conexiones)
+{
+
+	bool esSolucion;
+
+	for (unsigned int i = 0; i < conexiones.size(); i++)
+	{
+		esSolucion = false;
+
+		for (unsigned int j = 0; j < solucion.size(); j++)
+		{
+			if (conexiones[i] == solucion[j])
+			{
+				esSolucion = true;
+				break;
+			}
+		}
+
+		if (!esSolucion)
+		{
+			break;
+		}
+	}
+
+	return esSolucion;
+}
+
 // FUNCION PRINCIPAL BUSQUEDA LOCAL
 int busquedaLocal(vector<vector<int>> conexiones, vector<int> &cubierta)
 {
 	int elementoAleatorio1, elementoAleatorio2;
 	int quitado, agregar;
 	bool encontrado;
-	vector<int> ladosDeX;
+	vector<int> ladosDeX, ladosDeXTotales;
 	vector<vector<int>> listaLados = conexiones;
 
 	vector<int> solucionInicial = cubierta;
@@ -476,6 +503,7 @@ int busquedaLocal(vector<vector<int>> conexiones, vector<int> &cubierta)
 		// cout << "Aleaorio 1:" << elementoAleatorio1 << endl;
 		quitado = solucionInicial[elementoAleatorio1];
 		ladosDeX = listaLados[quitado - 1];
+		ladosDeXTotales = ladosDeX;
 		encontrado = false;
 
 		for (unsigned int w = 0; w < posibleSolucion.size(); w++)
@@ -494,6 +522,7 @@ int busquedaLocal(vector<vector<int>> conexiones, vector<int> &cubierta)
 			agregar = ladosDeX[elementoAleatorio2];
 			ladosDeX.erase(ladosDeX.begin() + elementoAleatorio2);
 
+			// Verificamos si el nodo a agregar ya esta en la solución
 			for (unsigned int z = 0; z < posibleSolucion.size(); z++)
 			{
 				if (posibleSolucion[z] == agregar)
@@ -503,23 +532,30 @@ int busquedaLocal(vector<vector<int>> conexiones, vector<int> &cubierta)
 				}
 			}
 
+			// Si no se encuentra, lo agregamos.
 			if (!encontrado)
 			{
 				posibleSolucion.push_back(agregar);
 			}
 
 			// Verificamos que el Cambio sea una solucion
-			if (verificarSolucion(posibleSolucion, conexiones))
+			if (verificarSolucionBL(posibleSolucion, ladosDeXTotales))
 			{
 
 				solucionFinal = posibleSolucion;
 				encontrado = false;
 				break;
 			}
-			else
+
+			if (!encontrado)
 			{
 				posibleSolucion.pop_back();
 				encontrado = false;
+			}
+
+			if (ladosDeX.size() == 0)
+			{
+				posibleSolucion.push_back(quitado);
 			}
 		}
 
@@ -771,6 +807,7 @@ vector<int> busquedaLocalTabu(vector<vector<int>> conexiones, vector<int> &cubie
 			agregar = ladosDeX[elementoAleatorio2];
 			ladosDeX.erase(ladosDeX.begin() + elementoAleatorio2);
 
+			// Verificamos si el nuevo nodo a agregar ya esta en la solucion
 			for (unsigned int z = 0; z < posibleSolucion.size(); z++)
 			{
 				if (posibleSolucion[z] == agregar)
@@ -780,6 +817,7 @@ vector<int> busquedaLocalTabu(vector<vector<int>> conexiones, vector<int> &cubie
 				}
 			}
 
+			// Si el nodo a agregar no esta en la solución. Se agrega
 			if (!encontrado)
 			{
 				posibleSolucion.push_back(agregar);
@@ -830,8 +868,9 @@ int busquedaTabu(vector<vector<int>> conexiones, vector<int> &cubierta)
 
 	menorCubierta = cubierta.size();
 
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < 100; i++)
 	{
+		cout << i << endl;
 		busquedaLocalTabu(conexiones, solucionConTabu, memoria);
 
 		if (verificarSolucion(solucionConTabu, conexiones))
