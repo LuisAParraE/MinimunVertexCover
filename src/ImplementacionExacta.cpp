@@ -332,84 +332,50 @@ int respAproximada(vector<Vertice> &todosVert, vector<vector<int>> &conexiones, 
 }
 
 // FUNCION DE SOLUCION ALEATORIA
-int respAleatoria(vector<Vertice> todosVert, vector<vector<int>> conexiones, vector<int> &cubierta)
+int respAleatoria(vector<vector<int>> conexiones, vector<int> &cubierta)
 {
-	vector<vector<int>> todasConexiones = conexiones;
-	int nroAleatorio1, nroAleatorio2, verticeIndex, vertice2;
-	Vertice vertice1;
-	vector<int>::iterator inicio;
+	int nroAleatorio1, nroAleatorio2, vertice1, vertice2;
+	vector<int> conexionesVertice1;
+	bool encontrado;
 
-	while (!verificarSolucion(cubierta, todasConexiones))
+	while (!verificarSolucion(cubierta, conexiones))
 	{
-		nroAleatorio1 = rand() % todosVert.size();
-		vertice1 = todosVert[nroAleatorio1];
-		// QUITAMOS EL PRIMER VERTICE DE TODOS LOS VERTICES
-		todosVert.erase(todosVert.begin() + nroAleatorio1);
-		cubierta.push_back(vertice1.nro);
+		nroAleatorio1 = rand() % conexiones.size();
+		vertice1 = nroAleatorio1 + 1;
+		conexionesVertice1 = conexiones[nroAleatorio1];
 
-		if (conexiones[vertice1.nro - 1].size() > 0)
+		nroAleatorio2 = rand() % conexionesVertice1.size();
+		vertice2 = conexionesVertice1[nroAleatorio2];
+
+		encontrado = false;
+		for (unsigned int i = 0; i < cubierta.size(); i++)
 		{
-			nroAleatorio2 = rand() % conexiones[vertice1.nro - 1].size();
-			vertice2 = conexiones[vertice1.nro - 1][nroAleatorio2];
+			if (vertice1 == cubierta[i])
+			{
+				encontrado = true;
+				break;
+			}
+		}
 
+		if (!encontrado)
+		{
+			cubierta.push_back(vertice1);
+		}
+
+		encontrado = false;
+		for (unsigned int i = 0; i < cubierta.size(); i++)
+		{
+			if (vertice2 == cubierta[i])
+			{
+				encontrado = true;
+				break;
+			}
+		}
+
+		if (!encontrado)
+		{
 			cubierta.push_back(vertice2);
-
-			// QUITAMOS EL SEGUNDO VERTICE DE TODOS LOS VERTICES
-			for (unsigned int i = 0; i < todosVert.size(); i++)
-			{
-				if (vertice2 == todosVert[i].nro)
-				{
-					todosVert.erase(todosVert.begin() + i);
-					break;
-				}
-			}
-
-			// ELIMINAMOS CONEXIONES DEL SEGUNDO VERTICE
-			verticeIndex = vertice2 - 1;
-			for (unsigned int j = 0; j < conexiones[verticeIndex].size(); j++)
-			{
-
-				unsigned int aux = conexiones[verticeIndex][j] - 1;
-				inicio = conexiones[aux].begin();
-
-				// Eliminamos todas las Conexiones HACIA el vertice solucion
-				for (unsigned int k = 0; k < conexiones[aux].size(); k++)
-				{
-					if ((int)(verticeIndex + 1) == conexiones[aux][k])
-					{
-
-						conexiones[aux].erase(inicio + k);
-
-						break;
-					}
-				}
-			}
-			// Eliminamos Todas Las Conexiones Desde El vertice solucion
-			conexiones[verticeIndex].clear();
 		}
-
-		// ELIMINAMOS CONEXIONES DEL PRIMER VERTICE
-		verticeIndex = vertice1.grado - 1;
-		for (unsigned int j = 0; j < conexiones[verticeIndex].size(); j++)
-		{
-
-			unsigned int aux = conexiones[verticeIndex][j] - 1;
-			inicio = conexiones[aux].begin();
-
-			// Eliminamos todas las Conexiones HACIA el vertice solucion
-			for (unsigned int k = 0; k < conexiones[aux].size(); k++)
-			{
-				if ((int)(verticeIndex + 1) == conexiones[aux][k])
-				{
-
-					conexiones[aux].erase(inicio + k);
-
-					break;
-				}
-			}
-		}
-		// Eliminamos Todas Las Conexiones Desde El vertice solucion
-		conexiones[verticeIndex].clear();
 	}
 
 	return cubierta.size();
@@ -925,18 +891,60 @@ int aptitud(vector<bool> genotipo)
 void seleccionarPadres(vector<vector<bool>> &padre1, vector<vector<bool>> &padre2, vector<vector<bool>> poblacion)
 {
 
-	int aleatorio1, aleatorio2;
-	aleatorio2 = rand() % poblacion.size();
-	aleatorio1 = rand() % poblacion.size();
-	while (padre1.size() < 20)
+	int aleatorio;
+	bool repetido;
+	int cantPadres = 5 * ((rand() % 3) + 2);
+	vector<int> numPadre1, numPadre2;
+
+	// Escogemos los primeros padres
+	while (padre1.size() < cantPadres)
 	{
-		while (aleatorio2 == aleatorio1)
+		aleatorio = rand() % poblacion.size();
+		repetido = false;
+		for (unsigned int i = 0; i < numPadre1.size(); i++)
 		{
-			aleatorio2 = rand() % poblacion.size();
+			if (aleatorio == numPadre1[i])
+			{
+				repetido = true;
+				break;
+			}
 		}
 
-		padre1.push_back(poblacion[aleatorio1]);
-		padre2.push_back(poblacion[aleatorio2]);
+		if (!repetido)
+		{
+			padre1.push_back(poblacion[aleatorio]);
+			numPadre1.push_back(aleatorio);
+		}
+	}
+
+	// Escogemos los segundos padres
+	while (padre2.size() < cantPadres)
+	{
+		aleatorio = rand() % poblacion.size();
+		repetido = false;
+		for (unsigned int i = 0; i < numPadre1.size(); i++)
+		{
+			if (aleatorio == numPadre1[i])
+			{
+				repetido = true;
+				break;
+			}
+		}
+
+		for (unsigned int i = 0; i < numPadre2.size() && !repetido; i++)
+		{
+			if (aleatorio == numPadre2[i])
+			{
+				repetido = true;
+				break;
+			}
+		}
+
+		if (!repetido)
+		{
+			padre2.push_back(poblacion[aleatorio]);
+			numPadre2.push_back(aleatorio);
+		}
 	}
 }
 
@@ -945,7 +953,7 @@ void generarPoblacion(vector<vector<bool>> &poblacion, vector<vector<int>> conex
 	for (int i = 0; i < tam; i++)
 	{
 		vector<int> nuevaSolucion;
-		respAleatoria(todosVert, conexiones, nuevaSolucion);
+		respAleatoria(conexiones, nuevaSolucion);
 		poblacion.push_back(codificar(nuevaSolucion, conexiones.size()));
 	}
 
@@ -957,8 +965,12 @@ void generarHijos(vector<vector<bool>> padre1, vector<vector<bool>> padre2, vect
 	int probabilidad;
 	for (unsigned int j = 0; j < padre1.size(); j++)
 	{
+		vector<bool> nuevohijo1;
+		vector<bool> nuevohijo2;
+		hijo1.push_back(nuevohijo1);
+		hijo2.push_back(nuevohijo2);
 
-		for (unsigned int i = 0; i < padre1.size(); i++)
+		for (unsigned int i = 0; i < padre1[j].size(); i++)
 		{
 			probabilidad = rand() % 100;
 
@@ -981,11 +993,11 @@ void mutarHijo(vector<vector<bool>> &hijo)
 	int probabilidad;
 	for (unsigned int j = 0; j < hijo.size(); j++)
 	{
-		for (unsigned int i = 0; i < hijo.size(); i++)
+		for (unsigned int i = 0; i < hijo[j].size(); i++)
 		{
 			probabilidad = rand() % 100;
 
-			if (probabilidad > 94)
+			if (probabilidad < 2)
 			{
 				hijo[j][i] = !hijo[j][i];
 			}
@@ -995,7 +1007,8 @@ void mutarHijo(vector<vector<bool>> &hijo)
 
 vector<vector<bool>> nuevaPoblacion(vector<vector<bool>> poblacion, vector<vector<bool>> hijo1, vector<vector<bool>> hijo2, vector<vector<int>> conexiones, int tam)
 {
-	int probabilidad, valorAp;
+	int probabilidad, indicePeor;
+	unsigned int valorAptitudMinimo;
 	bool agregado;
 	for (unsigned int i = 0; i < hijo1.size(); i++)
 	{
@@ -1014,61 +1027,68 @@ vector<vector<bool>> nuevaPoblacion(vector<vector<bool>> poblacion, vector<vecto
 		poblaDecodificada = decodificar(poblacion[i]);
 		if (verificarSolucion(poblaDecodificada, conexiones))
 		{
-			valorAp = poblaDecodificada.size();
-
+			// Si esta vacio lo inicializamos
 			if (mejores.size() == 0)
 			{
 
 				mejores.push_back(poblacion[i]);
+				valorAptitudMinimo = poblaDecodificada.size();
 				agregado = true;
 			}
 			else
-			{
-
-				for (unsigned int j = 0; j < mejores.size(); j++)
+			{ // Si la solucion encontrada es menor que la mejor obtenida se agrega de primera
+				if (valorAptitudMinimo > poblaDecodificada.size())
 				{
-					if (valorAp <= aptitud(mejores[j]))
+					mejores.insert(mejores.begin(), poblacion[i]);
+					valorAptitudMinimo = poblaDecodificada.size();
+					agregado = true;
+				}
+				else
+				{ // Sino se agrega por orden de aptitud
+					for (unsigned int j = 0; j < mejores.size(); j++)
 					{
-
-						mejores.insert(mejores.begin() + j, poblacion[i]);
-						agregado = true;
-						break;
+						if (aptitud(mejores[j]) == poblaDecodificada.size())
+						{
+							mejores.insert(mejores.begin() + j, poblacion[i]);
+							agregado = true;
+							break;
+						}
 					}
 				}
 
 				if (!agregado)
 				{
-
 					mejores.push_back(poblacion[i]);
 				}
 			}
 		}
 		else
-		{
-
+		{ // Si no es solucion, se agrega en las peores
 			peores.push_back(poblacion[i]);
 		}
 	}
 
+	// Seleccionamos la segunda generación
 	for (int i = 0; i < tam; i++)
 	{
 		probabilidad = rand() % 100;
-		if (probabilidad < 95 && mejores.size() > 0)
+		if (probabilidad < 70 && mejores.size() > 0)
 		{
 			poblacionNueva.push_back(mejores[0]);
 			mejores.erase(mejores.begin());
 		}
 		else
 		{
-			if (peores.size() <= 0)
+			if (peores.size() <= 0 && mejores.size() > 0)
 			{
 				poblacionNueva.push_back(mejores[0]);
 				mejores.erase(mejores.begin());
 			}
-			else
+			else if (peores.size() > 0)
 			{
-				poblacionNueva.push_back(peores[0]);
-				peores.erase(peores.begin());
+				indicePeor = rand() % peores.size();
+				poblacionNueva.push_back(peores[indicePeor]);
+				peores.erase(peores.begin() + indicePeor);
 			}
 		}
 	}
@@ -1077,7 +1097,7 @@ vector<vector<bool>> nuevaPoblacion(vector<vector<bool>> poblacion, vector<vecto
 }
 
 // Algoritmo Genetico
-int algoritmoGenetico(vector<vector<int>> conexiones, vector<Vertice> todosVert, vector<int> &cubierta)
+int algoritmoGenetico(vector<vector<int>> conexiones, vector<Vertice> todosVert, vector<int> &cubierta, int iteraciones)
 {
 	vector<vector<bool>> poblacion;
 	vector<vector<bool>> padre1;
@@ -1085,12 +1105,13 @@ int algoritmoGenetico(vector<vector<int>> conexiones, vector<Vertice> todosVert,
 	vector<vector<bool>> hijo1;
 	vector<vector<bool>> hijo2;
 	vector<int> posibleSolucion;
-	int tamano = 50;
+	int tamano = 90;
 
 	generarPoblacion(poblacion, conexiones, todosVert, tamano);
 
-	for (int i = 0; i < 500; i++)
+	for (int i = 0; i < iteraciones; i++)
 	{
+
 		seleccionarPadres(padre1, padre2, poblacion);
 		generarHijos(padre1, padre2, hijo1, hijo2);
 		mutarHijo(hijo1);
@@ -1100,9 +1121,8 @@ int algoritmoGenetico(vector<vector<int>> conexiones, vector<Vertice> todosVert,
 		hijo2.clear();
 		padre1.clear();
 		padre2.clear();
+		// cout << i << endl;
 	}
-
-	cubierta = decodificar(poblacion[0]);
 
 	for (unsigned int i = 1; i < poblacion.size(); i++)
 	{
@@ -1145,6 +1165,7 @@ int SeleccionMetodo(int mode, string dir, int numberTest)
 	switch (mode)
 	{
 	case 1:
+
 		cout << "Comenzando Busqueda Exacta " << endl;
 		for (unsigned int i = 0; i < todosVert.size(); i++)
 		{
@@ -1158,6 +1179,18 @@ int SeleccionMetodo(int mode, string dir, int numberTest)
 		cout << "Busqueda Exacta: " << time << endl;
 		cout << "Resultado: " << resultado << endl;
 
+		/*
+			for (int i = 0; i < numberTest; i++)
+			{
+				t0 = clock();
+				resultado = respAleatoria(TodasLasConexiones, cubierta);
+				t1 = clock();
+				time = (double(t1 - t0) / CLOCKS_PER_SEC);
+				cout << "Busqueda Aleatoria: " << time << endl;
+				cout << "Resultado: " << resultado << endl;
+				cubierta.clear();
+			}
+		*/
 		break;
 
 	case 2:
@@ -1251,8 +1284,13 @@ int SeleccionMetodo(int mode, string dir, int numberTest)
 
 	case 5:
 
+		for (unsigned int i = 0; i < todosVert.size(); i++)
+		{
+			cubierta.push_back(i + 1);
+		}
+
 		t0 = clock();
-		resultado = algoritmoGenetico(TodasLasConexiones, todosVert, cubierta);
+		resultado = algoritmoGenetico(TodasLasConexiones, todosVert, cubierta, numberTest);
 		t1 = clock();
 		time = (double(t1 - t0) / CLOCKS_PER_SEC);
 		cout << "Algoritmo Genetico: " << time << endl;

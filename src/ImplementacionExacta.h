@@ -47,7 +47,7 @@ int respExacta(vector<int> todosVert, vector<vector<int>> conexiones, int cantid
 
 int respAproximada(vector<Vertice> &todosVert, vector<vector<int>> &conexiones, int &nroVer, int &nroAris, vector<int> &cubierta, int maximo);
 
-int respAleatoria(vector<Vertice> todosVert, vector<vector<int>> conexiones, vector<int> &cubierta);
+int respAleatoria(vector<vector<int>> conexiones, vector<int> &cubierta);
 
 bool chequearIntercambio(vector<int> lados, vector<int> solucionInicial, vector<int> solucionFinal, int elemQuita, int elemAgre);
 
@@ -77,7 +77,7 @@ void mutarHijo(vector<bool> &hijo);
 
 vector<vector<bool>> nuevaPoblacion(vector<vector<bool>> poblacion, vector<bool> hijo1, vector<bool> hijo2, vector<vector<int>> conexiones, int tam);
 
-int algoritmoGenetico(vector<vector<int>> conexiones, vector<Vertice> todosVert, vector<int> &cubierta);
+int algoritmoGenetico(vector<vector<int>> conexiones, vector<Vertice> todosVert, vector<int> &cubierta, int iteraciones);
 
 vector<int> indiceVertirceOrdenGrado(vector<int> cubierta, vector<Vertice> todosVert);
 
