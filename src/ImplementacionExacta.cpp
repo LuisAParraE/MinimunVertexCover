@@ -487,6 +487,7 @@ int busquedaLocal(vector<vector<int>> conexiones, vector<int> &cubierta)
 			// cout << "Aleaorio 2:" << elementoAleatorio2 << endl;
 			agregar = ladosDeX[elementoAleatorio2];
 			ladosDeX.erase(ladosDeX.begin() + elementoAleatorio2);
+			encontrado = false;
 
 			// Verificamos si el nodo a agregar ya esta en la solución
 			for (unsigned int z = 0; z < posibleSolucion.size(); z++)
@@ -948,7 +949,7 @@ void seleccionarPadres(vector<vector<bool>> &padre1, vector<vector<bool>> &padre
 	}
 }
 
-void generarPoblacion(vector<vector<bool>> &poblacion, vector<vector<int>> conexiones, vector<Vertice> todosVert, int tam)
+void generarPoblacion(vector<vector<bool>> &poblacion, vector<vector<int>> conexiones, int tam)
 {
 	for (int i = 0; i < tam; i++)
 	{
@@ -1107,7 +1108,7 @@ int algoritmoGenetico(vector<vector<int>> conexiones, vector<Vertice> todosVert,
 	vector<int> posibleSolucion;
 	int tamano = 90;
 
-	generarPoblacion(poblacion, conexiones, todosVert, tamano);
+	generarPoblacion(poblacion, conexiones, tamano);
 
 	for (int i = 0; i < iteraciones; i++)
 	{
@@ -1124,12 +1125,395 @@ int algoritmoGenetico(vector<vector<int>> conexiones, vector<Vertice> todosVert,
 		// cout << i << endl;
 	}
 
-	for (unsigned int i = 1; i < poblacion.size(); i++)
+	for (unsigned int i = 0; i < poblacion.size(); i++)
 	{
 		posibleSolucion = decodificar(poblacion[i]);
 		if (verificarSolucion(posibleSolucion, conexiones) && posibleSolucion.size() < cubierta.size())
 		{
 			cubierta = posibleSolucion;
+		}
+	}
+
+	return cubierta.size();
+}
+
+vector<bool> codificarMeme(vector<int> fenotipo, int size)
+{
+	vector<bool> genotipo;
+
+	for (int i = 0; i < size + 1; i++)
+	{
+		genotipo.push_back(false);
+	}
+
+	for (unsigned int i = 0; i < fenotipo.size(); i++)
+	{
+		genotipo[fenotipo[i] - 1] = true;
+	}
+
+	return genotipo;
+}
+
+vector<int> decodificarMeme(vector<bool> genotipo)
+{
+	vector<int> fenotipo;
+
+	for (unsigned int i = 0; i < genotipo.size() - 1; i++)
+	{
+		if (genotipo[i])
+		{
+			fenotipo.push_back(i + 1);
+		}
+	}
+
+	return fenotipo;
+}
+
+void generarPoblacionMeme(vector<vector<bool>> &poblacion, vector<vector<int>> conexiones, int tam)
+{
+	vector<bool> pobladorCodificado;
+	for (int i = 0; i < tam; i++)
+	{
+		vector<int> nuevaSolucion;
+		respAleatoria(conexiones, nuevaSolucion);
+		pobladorCodificado = codificarMeme(nuevaSolucion, conexiones.size());
+		pobladorCodificado[conexiones.size()] = true;
+		poblacion.push_back(pobladorCodificado);
+	}
+
+	return;
+}
+
+vector<vector<bool>> nuevaPoblacionMeme(vector<vector<bool>> poblacion, vector<vector<bool>> hijos, vector<vector<int>> conexiones, int tam)
+{
+	vector<int> hijoDecodificado;
+	vector<bool> hijoCodificado;
+	vector<vector<bool>> nuevaPoblacion;
+
+	for (unsigned int i = 0; i < hijos.size(); i++)
+	{
+		hijoDecodificado = decodificar(hijos[i]);
+		busquedaLocal(conexiones, hijoDecodificado);
+		hijoCodificado = codificarMeme(hijoDecodificado, hijos[0].size());
+
+		if (verificarSolucion(hijoDecodificado, conexiones))
+		{
+			hijoCodificado[hijos[0].size()] = true;
+		}
+
+		nuevaPoblacion.push_back(hijoCodificado);
+	}
+
+	return nuevaPoblacion;
+}
+
+void seleccionarPadresMeme(vector<vector<int>> &padres, vector<vector<bool>> poblacion, int tam)
+{
+	int aleatorio;
+	int cantPadres;
+	int total = 0;
+	int indice = 0;
+
+	while (total < tam)
+	{
+		cantPadres = 4;
+
+		if (total + cantPadres >= tam)
+		{
+			cantPadres = tam - total;
+		}
+
+		vector<int> nuevosPadres;
+		padres.push_back(nuevosPadres);
+
+		for (int i = 0; i < cantPadres; i++)
+		{
+			aleatorio = rand() % poblacion.size();
+			padres[indice].push_back(aleatorio);
+		}
+
+		total = total + cantPadres;
+		indice++;
+	}
+}
+
+void generarHijosMeme(vector<vector<int>> padres, vector<vector<bool>> &hijos, vector<vector<bool>> poblacion)
+{
+	// int aleatorio1, aleatorio2;
+	int piso, techo;
+	// vector<int> soluciones, NoSoluciones;
+	piso = 0;
+	for (unsigned int i = 0; i < padres.size(); i++)
+	{
+		for (unsigned int j = 0; j < padres[i].size(); j++)
+		{
+			vector<bool> hijoNuevo;
+			hijos.push_back(hijoNuevo);
+
+			/*if (poblacion[padres[i][j]][poblacion[i].size() - 1])
+			{
+				soluciones.push_back(padres[i][j]);
+			}
+			else
+			{
+				NoSoluciones.push_back(padres[i][j]);
+			}*/
+		}
+
+		techo = piso + padres[i].size();
+
+		for (unsigned int j = 0; j < poblacion[i].size() - 1; j++)
+		{
+			bool valor1 = false;
+			bool valor2 = true;
+
+			for (unsigned int k = 0; k < padres[i].size(); k++)
+			{
+				valor1 = valor1 || poblacion[padres[i][k]][j];
+				valor2 = valor2 && poblacion[padres[i][k]][j];
+			}
+
+			hijos[piso].push_back(valor1);
+			hijos[piso + 1].push_back(!valor1);
+			hijos[piso + 2].push_back(valor2);
+			hijos[piso + 3].push_back(!valor2);
+
+			/*
+			int k = piso;
+
+			while (k < techo)
+			{
+				aleatorio1 = rand() % 100;
+
+				if (aleatorio1 > 70 && NoSoluciones.size() > 0)
+				{
+					aleatorio2 = rand() % NoSoluciones.size();
+					hijos[k].push_back(poblacion[NoSoluciones[aleatorio2]][j]);
+					k++;
+				}
+				else if (aleatorio1 <= 70 && soluciones.size() > 0)
+				{
+					aleatorio2 = rand() % soluciones.size();
+					hijos[k].push_back(poblacion[soluciones[aleatorio2]][j]);
+					k++;
+				}
+			}*/
+		}
+		piso = techo;
+	}
+}
+
+// Algoritmo memético
+int algoritmoMemetico(vector<vector<int>> conexiones, vector<Vertice> todosVert, vector<int> &cubierta, int iteraciones)
+{
+	vector<vector<bool>> poblacion;
+	vector<vector<int>> padres;
+	vector<vector<bool>> hijos;
+
+	vector<int> posibleSolucion;
+	int tamano = 52;
+
+	generarPoblacionMeme(poblacion, conexiones, tamano);
+
+	for (int i = 0; i < iteraciones; i++)
+	{
+		// cout << "inicio: " << i << endl;
+		seleccionarPadresMeme(padres, poblacion, tamano);
+		// cout << "Seleccione Padres" << endl;
+		generarHijosMeme(padres, hijos, poblacion);
+		// cout << "Genere Hijos" << endl;
+		poblacion = nuevaPoblacionMeme(poblacion, hijos, conexiones, tamano);
+		// cout << "Genere Nueva Poblacion" << endl;
+		hijos.clear();
+		padres.clear();
+		// cout << "fin: " << i << endl;
+		//  cout << i << endl;
+	}
+
+	for (unsigned int i = 0; i < poblacion.size(); i++)
+	{
+		posibleSolucion = decodificarMeme(poblacion[i]);
+		if (poblacion[i][poblacion[i].size() - 1] && posibleSolucion.size() < cubierta.size())
+		{
+			cubierta = posibleSolucion;
+		}
+	}
+
+	return cubierta.size();
+}
+
+void reducirGrado(vector<vector<int>> conexiones, vector<Vertice> &todosVert, vector<int> cubierta)
+{
+
+	for (unsigned int i = 0; i < cubierta.size(); i++)
+	{
+		for (unsigned int j = 0; j < conexiones[cubierta[i] - 1].size(); j++)
+		{
+			todosVert[conexiones[cubierta[i] - 1][j] - 1].grado = todosVert[conexiones[cubierta[i] - 1][j] - 1].grado - 1;
+		}
+	}
+}
+
+void moverHormiga(vector<vector<int>> conexiones, vector<Vertice> todosVert, vector<int> &cubierta, vector<int> feromonas)
+{
+	vector<int> RCL;
+	vector<int> movimientosPosibles = conexiones[cubierta.back() - 1];
+	float alpha = 0.7;
+	int CostoMax = 0;
+	int CostoMin = conexiones.size();
+	int limite, indiceFeromona, aleatorio;
+	int mayorFeromona;
+	reducirGrado(conexiones, todosVert, cubierta);
+	mayorFeromona = 0;
+	indiceFeromona = -1;
+
+	for (unsigned int i = 0; i < cubierta.size(); i++)
+	{
+		for (unsigned int j = 0; j < movimientosPosibles.size(); j++)
+		{
+			if (cubierta[i] == movimientosPosibles[j])
+			{
+				movimientosPosibles.erase(movimientosPosibles.begin() + j);
+				break;
+			}
+		}
+	}
+
+	for (unsigned int i = 0; i < movimientosPosibles.size(); i++)
+	{
+		if (feromonas[movimientosPosibles[i] - 1] > mayorFeromona)
+		{
+			mayorFeromona = feromonas[movimientosPosibles[i] - 1];
+			indiceFeromona = i;
+		}
+	}
+
+	if (movimientosPosibles.size() == 0)
+	{
+		aleatorio = rand() % conexiones[cubierta.back() - 1].size();
+		int movimiento = conexiones[cubierta.back() - 1][aleatorio];
+
+		for (unsigned int j = 0; j < cubierta.size(); j++)
+		{
+			if (cubierta[j] == movimiento)
+			{
+				cubierta.erase(cubierta.begin() + j);
+				break;
+			}
+		}
+
+		cubierta.push_back(movimiento);
+	}
+	else if (indiceFeromona == -1)
+	{
+		for (unsigned int i = 0; i < movimientosPosibles.size(); i++)
+		{
+			if (todosVert[movimientosPosibles[i] - 1].grado > CostoMax)
+			{
+				CostoMax = todosVert[movimientosPosibles[i] - 1].grado;
+			}
+
+			if (todosVert[movimientosPosibles[i] - 1].grado < CostoMin)
+			{
+				CostoMin = todosVert[movimientosPosibles[i] - 1].grado;
+			}
+		}
+
+		limite = CostoMax - alpha * (CostoMax - CostoMin);
+
+		for (unsigned int i = 0; i < movimientosPosibles.size(); i++)
+		{
+			if (todosVert[movimientosPosibles[i] - 1].grado >= limite)
+			{
+				RCL.push_back(movimientosPosibles[i]);
+			}
+		}
+
+		aleatorio = rand() % RCL.size();
+		cubierta.push_back(RCL[aleatorio]);
+	}
+	else
+	{
+		cubierta.push_back(movimientosPosibles[indiceFeromona]);
+	}
+}
+
+void dispersarFeromonas(vector<int> &feromonas)
+{
+
+	for (unsigned int i = 0; i < feromonas.size(); i++)
+	{
+		feromonas[i] = feromonas[i] * 0.6;
+	}
+}
+
+bool hormigasEstaticas(vector<bool> estadoHormigas)
+{
+
+	bool estaticas = true;
+
+	for (unsigned int i = 0; i < estadoHormigas.size(); i++)
+	{
+		if (!estadoHormigas[i])
+		{
+			estaticas = false;
+			break;
+		}
+	}
+
+	return estaticas;
+}
+
+// Colonia de Hormigas
+int coloniaHormigas(vector<vector<int>> conexiones, vector<Vertice> todosVert, vector<int> &cubierta, int hormigas)
+{
+	vector<int> feromonas;
+	vector<vector<int>> soluciones;
+	vector<bool> solucionCompletada;
+	int aleatorio;
+
+	for (unsigned int i = 0; i < conexiones.size(); i++)
+	{
+		feromonas.push_back(0);
+	}
+
+	for (int i = 0; i < hormigas; i++)
+	{
+		aleatorio = rand() % conexiones.size();
+		vector<int> nuevaSolucion;
+		nuevaSolucion.push_back(aleatorio + 1);
+		soluciones.push_back(nuevaSolucion);
+		solucionCompletada.push_back(false);
+	}
+
+	while (!hormigasEstaticas(solucionCompletada))
+	{
+
+		for (int i = 0; i < hormigas; i++)
+		{
+			if (!solucionCompletada[i])
+			{
+
+				moverHormiga(conexiones, todosVert, soluciones[i], feromonas);
+
+				if (verificarSolucion(soluciones[i], conexiones))
+				{
+					solucionCompletada[i] = true;
+				}
+			}
+		}
+
+		for (unsigned int i = 0; i < soluciones.size(); i++)
+		{
+			feromonas[soluciones[i].back() - 1] = feromonas[soluciones[i].back() - 1] + 2;
+		}
+	}
+
+	for (unsigned int i = 0; i < soluciones.size(); i++)
+	{
+		if (verificarSolucion(soluciones[i], conexiones) && soluciones[i].size() < cubierta.size())
+		{
+			cubierta = soluciones[i];
 		}
 	}
 
@@ -1142,6 +1526,8 @@ int algoritmoGenetico(vector<vector<int>> conexiones, vector<Vertice> todosVert,
 // 3.Busqueda Local Iterada
 // 4.Busqueda Tabú
 // 5.Algoritmo Genetico
+// 6.Algoritmo Memético
+// 7.Colonia Hormigas
 int SeleccionMetodo(int mode, string dir, int numberTest)
 {
 
@@ -1294,6 +1680,36 @@ int SeleccionMetodo(int mode, string dir, int numberTest)
 		t1 = clock();
 		time = (double(t1 - t0) / CLOCKS_PER_SEC);
 		cout << "Algoritmo Genetico: " << time << endl;
+		cout << "Resultado: " << resultado << endl;
+		break;
+
+	case 6:
+
+		for (unsigned int i = 0; i < todosVert.size(); i++)
+		{
+			cubierta.push_back(i + 1);
+		}
+
+		t0 = clock();
+		resultado = algoritmoMemetico(TodasLasConexiones, todosVert, cubierta, numberTest);
+		t1 = clock();
+		time = (double(t1 - t0) / CLOCKS_PER_SEC);
+		cout << "Algoritmo Memetico: " << time << endl;
+		cout << "Resultado: " << resultado << endl;
+		break;
+
+	case 7:
+
+		for (unsigned int i = 0; i < todosVert.size(); i++)
+		{
+			cubierta.push_back(i + 1);
+		}
+
+		t0 = clock();
+		resultado = coloniaHormigas(TodasLasConexiones, todosVert, cubierta, numberTest);
+		t1 = clock();
+		time = (double(t1 - t0) / CLOCKS_PER_SEC);
+		cout << "Colonia Hormigas: " << time << endl;
 		cout << "Resultado: " << resultado << endl;
 		break;
 
