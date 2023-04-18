@@ -111,6 +111,12 @@ bool hormigasEstaticas(vector<bool> estadoHormigas);
 
 int coloniaHormigas(vector<vector<int>> conexiones, vector<Vertice> todosVert, vector<int> &cubierta, int hormigas);
 
+bool picoAnzuelo(vector<Vertice> todosVert, int indiceVertice, int tipo, int minimo, int seccion);
+
+void laPesca(vector<vector<int>> conexiones, vector<Vertice> todosVert, vector<int> &cubierta, int peces, int iteraciones);
+
+int pescaIterativa(vector<vector<int>> conexiones, vector<Vertice> todosVert, vector<int> &cubierta, int iteraciones);
+
 int SeleccionMetodo(int mode, string dir, int numberTest);
 
 #endif

@@ -1520,6 +1520,242 @@ int coloniaHormigas(vector<vector<int>> conexiones, vector<Vertice> todosVert, v
 	return cubierta.size();
 }
 
+bool picoAnzuelo(vector<Vertice> todosVert, int indiceVertice, int tipo, int minimo, int seccion)
+{
+
+	int peso = todosVert[indiceVertice].grado;
+	int aleatorio = rand() % 100;
+	bool pico = false;
+
+	if (peso >= minimo && peso < minimo + seccion)
+	{
+		if (tipo == 0 && aleatorio < 50)
+		{
+			pico = true;
+		}
+		else if (tipo == 1 && aleatorio < 20)
+		{
+			pico = true;
+		}
+		else if (tipo == 2 && aleatorio < 10)
+		{
+			pico = true;
+		}
+	}
+	else if (peso >= minimo + seccion && peso < minimo + 2 * seccion)
+	{
+		if (tipo == 0 && aleatorio < 70 && 50 <= aleatorio)
+		{
+			pico = true;
+		}
+		else if (tipo == 1 && aleatorio < 70 && 20 <= aleatorio)
+		{
+			pico = true;
+		}
+		else if (tipo == 2 && aleatorio < 30 && 10 <= aleatorio)
+		{
+			pico = true;
+		}
+	}
+	else if (peso >= minimo + 2 * seccion)
+	{
+		if (tipo == 0 && aleatorio < 80 && 70 <= aleatorio)
+		{
+			pico = true;
+		}
+		else if (tipo == 1 && aleatorio < 80 && 70 <= aleatorio)
+		{
+			pico = true;
+		}
+		else if (tipo == 2 && aleatorio < 80 && 30 <= aleatorio)
+		{
+			pico = true;
+		}
+	}
+
+	return pico;
+}
+
+// La Pesca
+void laPesca(vector<vector<int>> conexiones, vector<Vertice> todosVert, vector<int> &cubierta, int peces, int iteraciones)
+{
+
+	struct Pez
+	{
+		int tipo;
+		bool pescado;
+		int posX;
+		int posY;
+	};
+
+	int tamEstanque = todosVert.size();
+	int estanque[tamEstanque][tamEstanque];
+	int z = 0;
+	int maximo = -1;
+	int seccion = 0;
+	int minimo = todosVert.size();
+	bool todosLosPecesPescados = false;
+	Pez pecesitos[peces];
+
+	// Inicializamos el Estanque
+	for (int i = 0; i < tamEstanque; i++)
+	{
+		for (int j = 0; j < tamEstanque; j++)
+		{
+			estanque[i][j] = -1;
+		}
+	}
+
+	// Inicializamos los Peces
+	for (int i = 0; i < peces; i++)
+	{
+		pecesitos[i].pescado = false;
+		pecesitos[i].tipo = rand() % 3;
+		pecesitos[i].posX = rand() % tamEstanque;
+		pecesitos[i].posY = rand() % tamEstanque;
+	}
+
+	// Repartimos los nodos alrededor del estanque
+	while (z < todosVert.size())
+	{
+
+		int x = rand() % tamEstanque;
+		int y = rand() % tamEstanque;
+
+		if (maximo < todosVert[z].grado)
+		{
+			maximo = todosVert[z].grado;
+		}
+
+		if (minimo > todosVert[z].grado)
+		{
+			minimo = todosVert[z].grado;
+		}
+
+		if (estanque[x][y] == -1)
+		{
+			estanque[x][y] = todosVert[z].nro - 1;
+			z++;
+		}
+	}
+
+	seccion = maximo - minimo / 3;
+	z = 0;
+
+	while (z < iteraciones && !todosLosPecesPescados)
+	{
+		todosLosPecesPescados = true;
+		// Hacemos Acciones con cada pez
+		for (int i = 0; i < peces; i++)
+		{
+			if (!pecesitos[i].pescado)
+			{
+				todosLosPecesPescados = false;
+				// Verificamos si pica algun anzuelo
+				for (int k = -1; k < 2; k++)
+				{
+					for (int j = -1; j < 2; j++)
+					{
+						if (k == j)
+						{
+							continue;
+						}
+
+						int x = pecesitos[i].posX + k;
+						int y = pecesitos[i].posY + j;
+
+						if (x < 0)
+						{
+							x = tamEstanque - 1;
+						}
+						else if (x >= tamEstanque)
+						{
+							x = 0;
+						}
+
+						if (y < 0)
+						{
+							y = tamEstanque - 1;
+						}
+						else if (y >= tamEstanque)
+						{
+							y = 0;
+						}
+
+						// Verificamos el estanque
+
+						if (estanque[x][y] != -1)
+						{
+
+							if (picoAnzuelo(todosVert, estanque[x][y], pecesitos[i].tipo, minimo, seccion))
+							{
+								cubierta.push_back(estanque[x][y] + 1);
+								estanque[x][y] = -1;
+								pecesitos[i].pescado = true;
+								break;
+							}
+						}
+					}
+
+					if (pecesitos[i].pescado)
+					{
+						break;
+					}
+				}
+
+				// Movemos al pez
+				if (!pecesitos[i].pescado)
+				{
+					int x = pecesitos[i].posX + (rand() % 3) - 1;
+					int y = pecesitos[i].posY + (rand() % 3) - 1;
+
+					if (x < 0)
+					{
+						x = tamEstanque - 1;
+					}
+					else if (x >= tamEstanque)
+					{
+						x = 0;
+					}
+
+					if (y < 0)
+					{
+						y = tamEstanque - 1;
+					}
+					else if (y >= tamEstanque)
+					{
+						y = 0;
+					}
+
+					pecesitos[i].posX = x;
+					pecesitos[i].posY = y;
+				}
+			}
+		}
+
+		z++;
+	}
+}
+
+int pescaIterativa(vector<vector<int>> conexiones, vector<Vertice> todosVert, vector<int> &cubierta, int iteraciones)
+{
+	vector<int> nuevaCubierta;
+
+	for (int i = 0; i < iteraciones; i++)
+	{
+		laPesca(conexiones, todosVert, nuevaCubierta, 0.008 * todosVert.size() * todosVert.size(), 900);
+		busquedaLocal(conexiones, nuevaCubierta);
+		if (nuevaCubierta.size() < cubierta.size() && verificarSolucion(nuevaCubierta, conexiones))
+		{
+			cubierta = nuevaCubierta;
+		}
+
+		nuevaCubierta.clear();
+	}
+
+	return cubierta.size();
+}
+
 // Menu de Seleccion
 // 1.Metodo Exacto (Backtracking)
 // 2.Busqueda Local
@@ -1528,6 +1764,7 @@ int coloniaHormigas(vector<vector<int>> conexiones, vector<Vertice> todosVert, v
 // 5.Algoritmo Genetico
 // 6.Algoritmo Memético
 // 7.Colonia Hormigas
+// 8.La Pesca
 int SeleccionMetodo(int mode, string dir, int numberTest)
 {
 
@@ -1710,6 +1947,21 @@ int SeleccionMetodo(int mode, string dir, int numberTest)
 		t1 = clock();
 		time = (double(t1 - t0) / CLOCKS_PER_SEC);
 		cout << "Colonia Hormigas: " << time << endl;
+		cout << "Resultado: " << resultado << endl;
+		break;
+
+	case 8:
+
+		for (unsigned int i = 0; i < todosVert.size(); i++)
+		{
+			cubierta.push_back(i + 1);
+		}
+
+		t0 = clock();
+		resultado = pescaIterativa(TodasLasConexiones, todosVert, cubierta, numberTest);
+		t1 = clock();
+		time = (double(t1 - t0) / CLOCKS_PER_SEC);
+		cout << "La Pesca: " << time << endl;
 		cout << "Resultado: " << resultado << endl;
 		break;
 
