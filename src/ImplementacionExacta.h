@@ -61,13 +61,13 @@ bool verificarEnMemoriaBLI(vector<int> cubierta, vector<vector<int>> memoria);
 
 vector<int> perturbacionBLI(vector<int> cubierta, vector<vector<int>> &memoria, vector<vector<int>> conexiones, int distancia);
 
-int busquedaLocalIterada(vector<Vertice> todosVert, vector<vector<int>> conexiones, vector<int> &cubierta);
+int busquedaLocalIterada(vector<Vertice> todosVert, vector<vector<int>> conexiones, vector<int> &cubierta, int iteraciones);
 
 bool verificarMemoriaTabu(vector<vector<ParPerturbado>> memoria, int desde, int hasta);
 
 vector<int> busquedaLocalTabu(vector<vector<int>> conexiones, vector<int> &cubierta, vector<vector<ParPerturbado>> &memoria);
 
-int busquedaTabu(vector<vector<int>> conexiones, vector<int> &cubierta);
+int busquedaTabu(vector<vector<int>> conexiones, vector<int> &cubierta, int iteraciones);
 
 vector<bool> codificar(vector<int> fenotipo, int size);
 

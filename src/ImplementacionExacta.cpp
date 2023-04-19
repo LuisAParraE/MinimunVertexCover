@@ -319,9 +319,9 @@ int respAproximada(vector<Vertice> &todosVert, vector<vector<int>> &conexiones, 
 		checkVer(cubierta, conexiones, todosVert, nroAris);
 	}
 
-	cout << "Sali\n";
-	cout << "Aristas: " << nroAris << "\n";
-	cout << cubierta.size() << "\n";
+	// cout << "Sali\n";
+	// cout << "Aristas: " << nroAris << "\n";
+	// cout << cubierta.size() << "\n";
 	/*
 	for (unsigned int j = 0; j < cubierta.size(); j++)
 	{
@@ -545,14 +545,14 @@ vector<int> indiceVertirceOrdenGrado(vector<int> cubierta, vector<Vertice> todos
 		// cout << cubierta[i] - 1 << endl;
 		verticesOrdenados.push_back(todosVert[cubierta[i] - 1]);
 	}
-	cout << "Aqui" << endl;
+	// cout << "Aqui" << endl;
 	sort(verticesOrdenados.begin(), verticesOrdenados.end(), greater<Vertice>());
 
 	for (unsigned int i = 0; i < verticesOrdenados.size(); i++)
 	{
 		cubiertaOrdenada.push_back(verticesOrdenados[i].nro);
 	}
-	cout << "Aqui2" << endl;
+	// cout << "Aqui2" << endl;
 	return cubiertaOrdenada;
 }
 
@@ -609,7 +609,7 @@ bool verificarEnMemoriaBLI(vector<int> cubierta, vector<vector<int>> memoria)
 		}
 	}
 
-	cout << "retorne" << endl;
+	// cout << "retorne" << endl;
 	return false;
 }
 
@@ -681,7 +681,7 @@ vector<int> perturbacionBLI(vector<int> cubierta, vector<vector<int>> &memoria, 
 }
 
 // FUNCION DE BUSQUEDA LOCAL ITERADA
-int busquedaLocalIterada(vector<Vertice> todosVert, vector<vector<int>> conexiones, vector<int> &cubierta)
+int busquedaLocalIterada(vector<Vertice> todosVert, vector<vector<int>> conexiones, vector<int> &cubierta, int iteraciones)
 {
 	vector<vector<int>> memoria;
 	vector<int> posibleSolucion;
@@ -694,7 +694,7 @@ int busquedaLocalIterada(vector<Vertice> todosVert, vector<vector<int>> conexion
 	// cout << "Ordene los vertices" << endl;
 	distancia = 1;
 
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < iteraciones; i++)
 	{
 		// cout << "Comenzo Perturbacion" << endl;
 		vector<int> solucionPerturbada = perturbacionBLI(cubierta, memoria, conexiones, distancia);
@@ -709,6 +709,10 @@ int busquedaLocalIterada(vector<Vertice> todosVert, vector<vector<int>> conexion
 		}
 		// cout << "Pase el if" << endl;
 		distancia++;
+		if (2 * distancia >= cubierta.size())
+		{
+			distancia = cubierta.size() / 4;
+		}
 		// cout << "Sume distancia" << endl;
 	}
 
@@ -734,18 +738,18 @@ bool verificarMemoriaTabu(vector<vector<ParPerturbado>> memoria, int desde, int 
 vector<int> busquedaLocalTabu(vector<vector<int>> conexiones, vector<int> &cubierta, vector<vector<ParPerturbado>> &memoria)
 {
 	int elementoAleatorio1, elementoAleatorio2;
-	int quitado, agregar;
-	unsigned int tamMemoria = 5;
+	int quitado, agregar, nroCambios;
+	unsigned int tamMemoria = conexiones.size();
 	bool encontrado;
 	vector<int> ladosDeX;
 	vector<vector<int>> listaLados = conexiones;
 	vector<ParPerturbado> cambiosMemoria;
-
+	nroCambios = 0;
 	vector<int> solucionInicial = cubierta;
 	vector<int> posibleSolucion;
 	vector<int> solucionFinal = cubierta;
 
-	while (solucionInicial.size() > 0)
+	while (solucionInicial.size() > 0 && nroCambios < 1)
 	{
 		// cout << "entre" << endl;
 		posibleSolucion = solucionFinal;
@@ -811,6 +815,7 @@ vector<int> busquedaLocalTabu(vector<vector<int>> conexiones, vector<int> &cubie
 		nuevoPar.hasta = quitado;
 		nuevoPar.desde = agregar;
 		cambiosMemoria.push_back(nuevoPar);
+		nroCambios++;
 	}
 
 	// Si la memoria temporal llego a su limite, la limpiamos
@@ -826,7 +831,7 @@ vector<int> busquedaLocalTabu(vector<vector<int>> conexiones, vector<int> &cubie
 }
 
 // Busqueda Tabu
-int busquedaTabu(vector<vector<int>> conexiones, vector<int> &cubierta)
+int busquedaTabu(vector<vector<int>> conexiones, vector<int> &cubierta, int iteraciones)
 {
 	vector<vector<ParPerturbado>> memoria;
 	vector<int> posibleSolucion;
@@ -835,15 +840,19 @@ int busquedaTabu(vector<vector<int>> conexiones, vector<int> &cubierta)
 
 	menorCubierta = cubierta.size();
 
-	for (int i = 0; i < 100; i++)
+	for (int i = 0; i < iteraciones; i++)
 	{
-		cout << i << endl;
 		busquedaLocalTabu(conexiones, solucionConTabu, memoria);
 
 		if (verificarSolucion(solucionConTabu, conexiones))
 		{
 			cubierta = solucionConTabu;
 			menorCubierta = cubierta.size();
+		}
+
+		if (i % 50 == 0 && i != 0)
+		{
+			solucionConTabu = cubierta;
 		}
 	}
 
@@ -991,16 +1000,19 @@ void generarHijos(vector<vector<bool>> padre1, vector<vector<bool>> padre2, vect
 
 void mutarHijo(vector<vector<bool>> &hijo)
 {
-	int probabilidad;
+	int probabilidadDeMutacion, bitMutado;
 	for (unsigned int j = 0; j < hijo.size(); j++)
 	{
-		for (unsigned int i = 0; i < hijo[j].size(); i++)
-		{
-			probabilidad = rand() % 100;
 
-			if (probabilidad < 2)
+		probabilidadDeMutacion = rand() % 100;
+		if (probabilidadDeMutacion < 40)
+		{
+
+			for (int i = 0; i < 1; i++)
 			{
-				hijo[j][i] = !hijo[j][i];
+				bitMutado = rand() % hijo.size();
+
+				hijo[j][bitMutado] = !hijo[j][bitMutado];
 			}
 		}
 	}
@@ -1740,10 +1752,21 @@ void laPesca(vector<vector<int>> conexiones, vector<Vertice> todosVert, vector<i
 int pescaIterativa(vector<vector<int>> conexiones, vector<Vertice> todosVert, vector<int> &cubierta, int iteraciones)
 {
 	vector<int> nuevaCubierta;
+	int peces = 8;
+
+	if (peces < 0.008 * todosVert.size())
+	{
+		peces = 0.008 * todosVert.size();
+	}
+
+	if (peces % 2 != 0)
+	{
+		peces = peces + 1;
+	}
 
 	for (int i = 0; i < iteraciones; i++)
 	{
-		laPesca(conexiones, todosVert, nuevaCubierta, 0.008 * todosVert.size() * todosVert.size(), 900);
+		laPesca(conexiones, todosVert, nuevaCubierta, peces * todosVert.size(), 900);
 		busquedaLocal(conexiones, nuevaCubierta);
 		if (nuevaCubierta.size() < cubierta.size() && verificarSolucion(nuevaCubierta, conexiones))
 		{
@@ -1789,6 +1812,8 @@ int SeleccionMetodo(int mode, string dir, int numberTest)
 	{
 	case 1:
 
+		OriginalCubierta = cubierta;
+
 		cout << "Comenzando Busqueda Exacta " << endl;
 		for (unsigned int i = 0; i < todosVert.size(); i++)
 		{
@@ -1801,18 +1826,18 @@ int SeleccionMetodo(int mode, string dir, int numberTest)
 		time = (double(t1 - t0) / CLOCKS_PER_SEC);
 		cout << "Busqueda Exacta: " << time << endl;
 		cout << "Resultado: " << resultado << endl;
-
 		/*
-			for (int i = 0; i < numberTest; i++)
-			{
-				t0 = clock();
-				resultado = respAleatoria(TodasLasConexiones, cubierta);
-				t1 = clock();
-				time = (double(t1 - t0) / CLOCKS_PER_SEC);
-				cout << "Busqueda Aleatoria: " << time << endl;
-				cout << "Resultado: " << resultado << endl;
-				cubierta.clear();
-			}
+		for (int i = 0; i < numberTest; i++)
+		{
+			cubierta = OriginalCubierta;
+			t0 = clock();
+			resultado = respAleatoria(TodasLasConexiones, cubierta);
+			t1 = clock();
+			time = (double(t1 - t0) / CLOCKS_PER_SEC);
+			cout << "Busqueda Aleatoria: " << time << endl;
+			cout << "Resultado: " << resultado << endl;
+			cubierta.clear();
+		}
 		*/
 		break;
 
@@ -1825,12 +1850,11 @@ int SeleccionMetodo(int mode, string dir, int numberTest)
 		cout << "Busqueda Aproximada: " << time << endl;
 		/*
 		t0 = clock();
-		resultado = respAleatoria(todosVert, conexiones, cubierta);
+		resultado = respAleatoria(conexiones, cubierta);
 		t1 = clock();
 		time = (double(t1 - t0) / CLOCKS_PER_SEC);
 		cout << "Busqueda Aleatoria: " << time << endl;
 		*/
-
 		/*
 		for (unsigned int j = 0; j < TodasLasConexiones.size(); j++)
 		{
@@ -1880,9 +1904,9 @@ int SeleccionMetodo(int mode, string dir, int numberTest)
 		t1 = clock();
 		time = (double(t1 - t0) / CLOCKS_PER_SEC);
 		cout << "Busqueda Aproximada: " << time << endl;
-		cout << OriginalTodosVert.size() << endl;
+		cout << "Resultado: " << resultado << endl;
 		t0 = clock();
-		resultado = busquedaLocalIterada(OriginalTodosVert, TodasLasConexiones, cubierta);
+		resultado = busquedaLocalIterada(OriginalTodosVert, TodasLasConexiones, cubierta, numberTest);
 		t1 = clock();
 		time = (double(t1 - t0) / CLOCKS_PER_SEC);
 		cout << "Busqueda Local Iterada: " << time << endl;
@@ -1892,13 +1916,13 @@ int SeleccionMetodo(int mode, string dir, int numberTest)
 	case 4:
 
 		t0 = clock();
-		resultado = respAproximada(todosVert, conexiones, nroVer, nroAris, cubierta, maximo);
+		resultado = respAleatoria(conexiones, cubierta);
 		t1 = clock();
 		time = (double(t1 - t0) / CLOCKS_PER_SEC);
-		cout << "Busqueda Aproximada: " << time << endl;
-		cout << OriginalTodosVert.size() << endl;
+		cout << "Busqueda Aleatoria: " << time << endl;
+		cout << "Resultado: " << resultado << endl;
 		t0 = clock();
-		resultado = busquedaTabu(TodasLasConexiones, cubierta);
+		resultado = busquedaTabu(TodasLasConexiones, cubierta, numberTest);
 		t1 = clock();
 		time = (double(t1 - t0) / CLOCKS_PER_SEC);
 		cout << "Busqueda Tabu: " << time << endl;
